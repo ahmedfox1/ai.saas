@@ -2,13 +2,13 @@ import streamlit as st
 from dotenv import load_dotenv
 from PyPDF2 import PdfReader
 from langchain.text_splitter import CharacterTextSplitter
-from langchain_community.embeddings import OpenAIEmbeddings, HuggingFaceInstructEmbeddings  # Updated imports
-from langchain_community.vectorstores import FAISS  # Updated import
-from langchain_community.chat_models import ChatOpenAI  # Updated import
+from langchain_community.embeddings import OpenAIEmbeddings, HuggingFaceInstructEmbeddings  # استيرادات محدثة
+from langchain_community.vectorstores import FAISS  # استيراد محدث
+from langchain_community.chat_models import ChatOpenAI  # استيراد محدث
 from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationalRetrievalChain
 from htmlTemplates import css, bot_template, user_template
-from langchain_community.llms import HuggingFaceHub  # Updated import
+from langchain_community.llms import HuggingFaceHub  # استيراد محدث
 from dotenv import load_dotenv
 
 def get_pdf_text(pdf_docs):
@@ -20,7 +20,7 @@ def get_pdf_text(pdf_docs):
     return text
 
 def get_text_chunks(text):
-    # Your existing code here
+    # الكود الحالي هنا
     text_splitter = CharacterTextSplitter(
         separator="\n",
         chunk_size=1000,
@@ -30,13 +30,11 @@ def get_text_chunks(text):
     chunks = text_splitter.split_text(text)
     return chunks
 
-
 def get_vectorstore(text_chunks):
     embeddings = OpenAIEmbeddings()
     # embeddings = HuggingFaceInstructEmbeddings(model_name="hkunlp/instructor-xl")
     vectorstore = FAISS.from_texts(texts=text_chunks, embedding=embeddings)
     return vectorstore
-
 
 def get_conversation_chain(vectorstore):
     llm = ChatOpenAI()
@@ -51,7 +49,6 @@ def get_conversation_chain(vectorstore):
     )
     return conversation_chain
 
-
 def handle_userinput(user_question):
     response = st.session_state.conversation({'question': user_question})
     st.session_state.chat_history = response['chat_history']
@@ -64,10 +61,9 @@ def handle_userinput(user_question):
             st.write(bot_template.replace(
                 "{{MSG}}", message.content), unsafe_allow_html=True)
 
-
 def main():
     load_dotenv()
-    st.set_page_config(page_title="Chat with multiple PDFs",
+    st.set_page_config(page_title="الدردشة مع ملفات :books:",
                        page_icon=":books:")
     st.write(css, unsafe_allow_html=True)
 
@@ -76,30 +72,25 @@ def main():
     if "chat_history" not in st.session_state:
         st.session_state.chat_history = None
 
-    st.header("Chat with multiple PDFs :books:")
-    user_question = st.text_input("Ask a question about your documents:")
+    st.header("الدردشة مع ملفات :books:")
+    user_question = st.text_input("اطرح سؤالاً حول مستنداتك:")
     if user_question:
         handle_userinput(user_question)
 
     with st.sidebar:
-        st.subheader("Your documents")
+        st.subheader("مستنداتك")
         pdf_docs = st.file_uploader(
-            "Upload your PDFs here and click on 'Process'", accept_multiple_files=True)
-        if st.button("Process"):
-            with st.spinner("Processing"):
-                # get pdf text
+            "قم بتحميل ملفات الخاصة بك هنا وانقر على 'معالجة'", accept_multiple_files=True)
+        if st.button("معالجة"):
+            with st.spinner("جاري المعالجة"):
                 raw_text = get_pdf_text(pdf_docs)
 
-                # get the text chunks
                 text_chunks = get_text_chunks(raw_text)
 
-                # create vector store
                 vectorstore = get_vectorstore(text_chunks)
 
-                # create conversation chain
                 st.session_state.conversation = get_conversation_chain(
                     vectorstore)
-
 
 if __name__ == '__main__':
     main()
